@@ -1,0 +1,109 @@
+<view class="page">
+  <!-- Header -->
+  <view class="header-bar">
+    <text class="header-title">🏓 配拍计算器</text>
+    <text class="header-desc">选择底板、胶皮、配件，自动计算总价</text>
+  </view>
+
+  <!-- 底板 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">1. 选择底板</text>
+      <text class="section-req" wx:if="{{!selected.blade}}">必选</text>
+      <text class="section-done" wx:else>已选 ¥{{selected.blade.price}}</text>
+    </view>
+    <scroll-view class="item-scroll" scroll-x>
+      <view wx:for="{{blades}}" wx:key="id"
+        class="item-card {{selected.blade && selected.blade.id == item.id ? 'active' : ''}}"
+        data-type="blade" data-id="{{item.id}}" bindtap="selectItem">
+        <image class="item-img" src="{{item.images && item.images[0]}}" mode="aspectFill"></image>
+        <text class="item-name">{{item.name}}</text>
+        <text class="item-price">¥{{item.price}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 正手胶皮 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">2. 正手胶皮</text>
+      <text class="section-req" wx:if="{{!selected.fh_rubber}}">必选</text>
+      <text class="section-done" wx:else>已选 ¥{{selected.fh_rubber.price}}</text>
+    </view>
+    <scroll-view class="item-scroll" scroll-x>
+      <view wx:for="{{rubbers}}" wx:key="id"
+        class="item-card {{selected.fh_rubber && selected.fh_rubber.id == item.id ? 'active' : ''}}"
+        data-type="fh_rubber" data-id="{{item.id}}" bindtap="selectItem">
+        <image class="item-img" src="{{item.images && item.images[0]}}" mode="aspectFill"></image>
+        <text class="item-name">{{item.name}}</text>
+        <text class="item-price">¥{{item.price}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 反手胶皮（可选） -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">3. 反手胶皮</text>
+      <text class="section-opt">可选</text>
+      <text class="section-done" wx:if="{{selected.bh_rubber}}">已选 ¥{{selected.bh_rubber.price}}</text>
+    </view>
+    <scroll-view class="item-scroll" scroll-x>
+      <view wx:for="{{rubbers}}" wx:key="id"
+        class="item-card {{selected.bh_rubber && selected.bh_rubber.id == item.id ? 'active' : ''}}"
+        data-type="bh_rubber" data-id="{{item.id}}" bindtap="selectItem">
+        <image class="item-img" src="{{item.images && item.images[0]}}" mode="aspectFill"></image>
+        <text class="item-name">{{item.name}}</text>
+        <text class="item-price">¥{{item.price}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 胶水（可选） -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">4. 胶水</text>
+      <text class="section-opt">可选</text>
+      <text class="section-done" wx:if="{{selected.glue}}">已选 ¥{{selected.glue.price}}</text>
+    </view>
+    <scroll-view class="item-scroll" scroll-x>
+      <view wx:for="{{glues}}" wx:key="id"
+        class="item-card {{selected.glue && selected.glue.id == item.id ? 'active' : ''}}"
+        data-type="glue" data-id="{{item.id}}" bindtap="selectItem">
+        <image class="item-img" src="{{item.images && item.images[0]}}" mode="aspectFill"></image>
+        <text class="item-name">{{item.name}}</text>
+        <text class="item-price">¥{{item.price}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 拍套（可选） -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">5. 拍套</text>
+      <text class="section-opt">可选</text>
+      <text class="section-done" wx:if="{{selected.case}}">已选 ¥{{selected.case.price}}</text>
+    </view>
+    <scroll-view class="item-scroll" scroll-x>
+      <view wx:for="{{cases}}" wx:key="id"
+        class="item-card {{selected.case && selected.case.id == item.id ? 'active' : ''}}"
+        data-type="case" data-id="{{item.id}}" bindtap="selectItem">
+        <image class="item-img" src="{{item.images && item.images[0]}}" mode="aspectFill"></image>
+        <text class="item-name">{{item.name}}</text>
+        <text class="item-price">¥{{item.price}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- Summary -->
+  <view class="summary-bar">
+    <view class="summary-left">
+      <text class="summary-label">已选 <text style="color:#1a73e8;font-weight:600">{{selected.blade ? 1 : 0}}件</text></text>
+      <text class="summary-total">合计: <text style="color:#e4393c;font-size:40rpx;font-weight:700">¥{{totalText}}</text></text>
+    </view>
+    <view class="summary-actions">
+      <button class="btn-reset" bindtap="reset">重置</button>
+      <button class="btn-addcart" bindtap="addToCart">一键加购</button>
+    </view>
+  </view>
+</view>

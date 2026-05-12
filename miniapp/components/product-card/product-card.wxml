@@ -1,0 +1,11 @@
+<view class="product-card" bindtap="goDetail">
+  <image class="product-image" src="{{product.images[0]}}" mode="aspectFill"></image>
+  <view class="product-info">
+    <text class="product-name">{{product.name}}</text>
+    <text class="product-desc" wx:if="{{product.desc}}">{{product.desc}}</text>
+    <view class="product-bottom">
+      <text class="product-price">¥{{product.price}}</text>
+      <text class="product-sales" wx:if="{{product.sales > 0}}">已售 {{product.sales}}</text>
+    </view>
+  </view>
+</view>

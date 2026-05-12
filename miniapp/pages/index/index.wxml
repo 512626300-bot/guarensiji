@@ -1,0 +1,52 @@
+<view class="page">
+  <!-- Header -->
+  <view class="store-header">
+    <text class="store-name">🏓 乒乓器材店</text>
+    <text class="store-desc">专业乒乓球器材一站式购物</text>
+  </view>
+
+  <!-- Configurator -->
+  <view class="config-banner" bindtap="goConfigurator">
+    <view class="config-text">
+      <text class="config-title">🏓 配拍计算器</text>
+      <text class="config-desc">底板+胶皮一键算总价</text>
+    </view>
+    <text class="config-arrow">›</text>
+  </view>
+
+  <!-- 4 Category groups -->
+  <view class="group-grid">
+    <view wx:for="{{groups}}" wx:key="id" class="group-card" data-group="{{item}}" bindtap="selectGroup" style="background:{{item.color}}">
+      <text class="group-icon">{{item.icon}}</text>
+      <text class="group-name">{{item.name}}</text>
+      <text class="group-desc">{{item.desc}}</text>
+    </view>
+  </view>
+
+  <!-- Products section -->
+  <view class="product-section">
+    <view class="section-header">
+      <text class="section-title" wx:if="{{!activeGroup}}">全部商品</text>
+      <text class="section-title" wx:else>{{activeGroup.name}}</text>
+      <text class="section-clear" wx:if="{{activeGroup}}" bindtap="clearFilter">‹ 显示全部</text>
+    </view>
+
+    <view class="product-list">
+      <view wx:for="{{products}}" wx:key="id" class="product-item" data-id="{{item.id}}" bindtap="goDetail">
+        <image class="p-img" src="{{item.images && item.images[0]}}" mode="aspectFill"></image>
+        <view class="p-info">
+          <text class="p-name">{{item.name}}</text>
+          <text class="p-desc" wx:if="{{item.desc}}">{{item.desc}}</text>
+          <view class="p-bottom">
+            <text class="p-price">¥{{item.price}}</text>
+            <text class="p-tag">{{item.category_name}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="state-text">加载中...</view>
+    <view wx:if="{{!loading && !products.length}}" class="state-text">暂无商品</view>
+    <view wx:if="{{!hasMore && products.length}}" class="state-text">— 没有更多了 —</view>
+  </view>
+</view>

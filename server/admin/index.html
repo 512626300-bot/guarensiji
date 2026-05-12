@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>商城管理后台</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, sans-serif; background: #f5f7fa; color: #333; }
+.header { background: #1a1a2e; color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 18px; }
+.header .user { font-size: 14px; opacity: .8; }
+.nav { background: #fff; border-bottom: 1px solid #e8e8e8; display: flex; padding: 0 24px; }
+.nav a { padding: 14px 20px; text-decoration: none; color: #666; font-size: 14px; border-bottom: 2px solid transparent; }
+.nav a:hover, .nav a.active { color: #1a73e8; border-bottom-color: #1a73e8; }
+.content { padding: 24px; max-width: 1200px; margin: 0 auto; }
+.page { display: none; }
+.page.active { display: block; }
+.card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+th { background: #fafafa; font-weight: 600; color: #555; }
+.btn { display: inline-block; padding: 6px 16px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+.btn-primary { background: #1a73e8; color: #fff; }
+.btn-success { background: #34a853; color: #fff; }
+.btn-danger { background: #ea4335; color: #fff; }
+.btn-warning { background: #fbbc04; color: #333; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+.tag-pending { background: #fef3cd; color: #856404; }
+.tag-paid { background: #d1ecf1; color: #0c5460; }
+.tag-shipped { background: #cce5ff; color: #004085; }
+.tag-done { background: #d4edda; color: #155724; }
+.tag-canceled { background: #f8d7da; color: #721c24; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; margin-bottom: 4px; font-size: 13px; color: #555; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+.form-group textarea { height: 80px; resize: vertical; }
+.form-row { display: flex; gap: 12px; }
+.form-row .form-group { flex: 1; }
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1000; justify-content: center; align-items: center; }
+.modal.show { display: flex; }
+.modal-content { background: #fff; border-radius: 8px; padding: 24px; width: 90%; max-width: 560px; max-height: 80vh; overflow-y: auto; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-header h2 { font-size: 18px; }
+.modal-close { cursor: pointer; font-size: 22px; color: #999; }
+.pagination { margin-top: 16px; display: flex; justify-content: center; gap: 8px; }
+.pagination button { padding: 6px 12px; border: 1px solid #ddd; background: #fff; border-radius: 4px; cursor: pointer; }
+.pagination button.active { background: #1a73e8; color: #fff; border-color: #1a73e8; }
+.login-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #1a1a2e; }
+.login-box { background: #fff; padding: 40px; border-radius: 12px; width: 360px; }
+.login-box h2 { text-align: center; margin-bottom: 24px; }
+.login-box .form-group { margin-bottom: 18px; }
+.login-box .btn { width: 100%; padding: 10px; font-size: 15px; }
+.images-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.images-preview img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+</style>
+</head>
+<body>
+<div id="loginPage" class="login-page">
+  <div class="login-box">
+    <h2>乒乓器材管理后台</h2>
+    <div class="form-group"><label>用户名</label><input id="loginUsername" value="admin"></div>
+    <div class="form-group"><label>密码</label><input id="loginPassword" type="password" value="admin123"></div>
+    <button class="btn btn-primary" onclick="login()">登录</button>
+    <p id="loginError" style="color:red;margin-top:10px;text-align:center;font-size:13px"></p>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="header">
+    <h1>🏓 乒乓器材管理后台</h1>
+    <div class="user"><span id="userDisplay"></span> | <a href="#" onclick="logout()" style="color:#fff;font-size:13px">退出</a></div>
+  </div>
+  <div class="nav">
+    <a href="#" class="active" data-page="dashboard">概览</a>
+    <a href="#" data-page="products">商品管理</a>
+    <a href="#" data-page="orders">订单管理</a>
+    <a href="#" data-page="categories">分类管理</a>
+    <a href="#" data-page="files">图片管理</a>
+  </div>
+  <div class="content">
+    <!-- Dashboard -->
+    <div class="page active" id="pageDashboard">
+      <div class="card">
+        <h3 style="margin-bottom:12px">数据概览</h3>
+        <div id="dashboardStats" style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:150px;padding:20px;background:#e8f0fe;border-radius:8px;text-align:center">
+            <div style="font-size:28px;font-weight:700;color:#1a73e8" id="statProducts">0</div>
+            <div style="font-size:13px;color:#666;margin-top:4px">商品总数</div>
+          </div>
+          <div style="flex:1;min-width:150px;padding:20px;background:#fef3cd;border-radius:8px;text-align:center">
+            <div style="font-size:28px;font-weight:700;color:#856404" id="statPending">0</div>
+            <div style="font-size:13px;color:#666;margin-top:4px">待处理订单</div>
+          </div>
+          <div style="flex:1;min-width:150px;padding:20px;background:#d4edda;border-radius:8px;text-align:center">
+            <div style="font-size:28px;font-weight:700;color:#155724" id="statDone">0</div>
+            <div style="font-size:13px;color:#666;margin-top:4px">已完成订单</div>
+          </div>
+          <div style="flex:1;min-width:150px;padding:20px;background:#f8d7da;border-radius:8px;text-align:center">
+            <div style="font-size:28px;font-weight:700;color:#721c24" id="statCanceled">0</div>
+            <div style="font-size:13px;color:#666;margin-top:4px">已取消订单</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products -->
+    <div class="page" id="pageProducts">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+          <h3>商品管理</h3>
+          <button class="btn btn-primary" onclick="showProductModal()">+ 新增商品</button>
+        </div>
+        <table>
+          <thead><tr><th>ID</th><th>图片</th><th>名称</th><th>价格</th><th>库存</th><th>分类</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="productTable"></tbody>
+        </table>
+        <div class="pagination" id="productPagination"></div>
+      </div>
+    </div>
+
+    <!-- Orders -->
+    <div class="page" id="pageOrders">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+          <h3>订单管理</h3>
+          <select id="orderFilter" onchange="loadOrders()" style="padding:6px 12px;border:1px solid #ddd;border-radius:4px">
+            <option value="">全部订单</option>
+            <option value="pending">待支付</option>
+            <option value="paid">已支付</option>
+            <option value="shipped">已发货</option>
+            <option value="done">已完成</option>
+            <option value="canceled">已取消</option>
+          </select>
+        </div>
+        <table>
+          <thead><tr><th>订单号</th><th>用户</th><th>商品</th><th>金额</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
+          <tbody id="orderTable"></tbody>
+        </table>
+        <div class="pagination" id="orderPagination"></div>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="page" id="pageCategories">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+          <h3>分类管理</h3>
+          <button class="btn btn-primary" onclick="showCategoryModal()">+ 新增分类</button>
+        </div>
+        <table>
+          <thead><tr><th>ID</th><th>名称</th><th>排序</th><th>操作</th></tr></thead>
+          <tbody id="categoryTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Files -->
+    <div class="page" id="pageFiles">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+          <h3>图片管理</h3>
+          <button class="btn btn-primary btn-sm" onclick="loadFiles()">刷新</button>
+        </div>
+        <div id="fileList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal" id="productModal">
+  <div class="modal-content">
+    <div class="modal-header"><h2 id="productModalTitle">新增商品</h2><span class="modal-close" onclick="closeModal('productModal')">&times;</span></div>
+    <div class="form-group"><label>商品名称</label><input id="prodName"></div>
+    <div class="form-row">
+      <div class="form-group"><label>价格 (元)</label><input id="prodPrice" type="number" step="0.01"></div>
+      <div class="form-group"><label>库存</label><input id="prodStock" type="number"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>分类</label><select id="prodCategory"></select></div>
+      <div class="form-group"><label>状态</label><select id="prodStatus"><option value="on">上架</option><option value="off">下架</option></select></div>
+    </div>
+    <div class="form-group"><label>商品描述</label><textarea id="prodDesc"></textarea></div>
+    <div class="form-group">
+      <label>商品图片</label>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="prodImageInput" placeholder="输入图片URL" style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:4px;font-size:14px">
+        <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="uploadImage()">
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('fileInput').click()">上传</button>
+        <button class="btn btn-sm btn-success" onclick="addImageUrl()">添加</button>
+      </div>
+      <textarea id="prodImages" placeholder="图片URL列表（自动生成）" style="display:none"></textarea>
+      <div class="images-preview" id="prodImagesPreview"></div>
+    </div>
+    <button class="btn btn-primary" onclick="saveProduct()">保存</button>
+    <input type="hidden" id="prodId">
+  </div>
+</div>
+
+<!-- Logistics Modal -->
+<div class="modal" id="logisticsModal">
+  <div class="modal-content">
+    <div class="modal-header"><h2>填写物流信息</h2><span class="modal-close" onclick="closeModal('logisticsModal')">&times;</span></div>
+    <div class="form-group"><label>物流公司</label><input id="logCompany" placeholder="如：顺丰速运"></div>
+    <div class="form-group"><label>运单号</label><input id="logTrackingNo" placeholder="如：SF1234567890"></div>
+    <button class="btn btn-primary" onclick="submitLogistics()">确认发货</button>
+    <input type="hidden" id="logOrderId">
+  </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal" id="categoryModal">
+  <div class="modal-content">
+    <div class="modal-header"><h2>新增分类</h2><span class="modal-close" onclick="closeModal('categoryModal')">&times;</span></div>
+    <div class="form-group"><label>分类名称</label><input id="catName"></div>
+    <div class="form-group"><label>排序（数字越小越靠前）</label><input id="catSort" type="number" value="0"></div>
+    <button class="btn btn-primary" onclick="saveCategory()">保存</button>
+  </div>
+</div>
+
+<script>
+const API = '';
+let TOKEN = localStorage.getItem('admin_token') || '';
+let currentPage = { products: 1, orders: 1 };
+
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (TOKEN) opts.headers.Authorization = 'Bearer ' + TOKEN;
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  if (res.status === 401) { logout(); throw new Error('未登录'); }
+  return res.json();
+}
+
+function login() {
+  const username = document.getElementById('loginUsername').value;
+  const password = document.getElementById('loginPassword').value;
+  api('POST', '/api/admin/login', { username, password }).then(data => {
+    if (data.token) {
+      TOKEN = data.token;
+      localStorage.setItem('admin_token', TOKEN);
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('userDisplay').textContent = data.username;
+      loadDashboard();
+      loadProducts();
+      loadOrders();
+      loadCategories();
+    } else {
+      document.getElementById('loginError').textContent = data.error || '登录失败';
+    }
+  });
+}
+
+function logout() {
+  TOKEN = '';
+  localStorage.removeItem('admin_token');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+}
+
+// Check auto login
+if (TOKEN) {
+  api('GET', '/api/admin/products?page=1&size=1').then(() => {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadDashboard(); loadProducts(); loadOrders(); loadCategories(); loadFiles();
+  }).catch(() => { localStorage.removeItem('admin_token'); TOKEN = ''; });
+}
+
+// Navigation
+document.querySelectorAll('.nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.nav a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page' + a.dataset.page.charAt(0).toUpperCase() + a.dataset.page.slice(1)).classList.add('active');
+    if (a.dataset.page === 'dashboard') loadDashboard();
+    if (a.dataset.page === 'files') loadFiles();
+  });
+});
+
+// ===== Dashboard =====
+async function loadDashboard() {
+  const [prodData, orderData] = await Promise.all([
+    api('GET', '/api/admin/products?page=1&size=1'),
+    api('GET', '/api/admin/orders?page=1&size=1')
+  ]);
+  document.getElementById('statProducts').textContent = prodData.total || 0;
+
+  // Get order counts by status
+  const allOrders = await api('GET', '/api/admin/orders?page=1&size=999');
+  const orders = allOrders.list || [];
+  document.getElementById('statPending').textContent = orders.filter(o => o.status === 'pending').length;
+  document.getElementById('statDone').textContent = orders.filter(o => o.status === 'done').length;
+  document.getElementById('statCanceled').textContent = orders.filter(o => o.status === 'canceled').length;
+}
+
+// ===== Products =====
+async function loadProducts() {
+  const data = await api('GET', `/api/admin/products?page=${currentPage.products}&size=10`);
+  const tbody = document.getElementById('productTable');
+  tbody.innerHTML = (data.list || []).map(p => `<tr>
+    <td>${p.id}</td>
+    <td>${p.images && p.images[0] ? `<img src="${p.images[0]}" style="width:40px;height:40px;object-fit:cover;border-radius:4px">` : '-'}</td>
+    <td>${p.name}</td>
+    <td>¥${p.price}</td>
+    <td>${p.stock}</td>
+    <td>${p.category_name || '-'}</td>
+    <td>${p.status === 'on' ? '<span style="color:#34a853">上架</span>' : '<span style="color:#999">下架</span>'}</td>
+    <td>
+      <button class="btn btn-sm btn-primary" onclick="editProduct(${p.id})">编辑</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">删除</button>
+    </td>
+  </tr>`).join('');
+  renderPagination('productPagination', data.total, 10, currentPage.products, p => { currentPage.products = p; loadProducts(); });
+}
+
+async function showProductModal(id) {
+  document.getElementById('productModalTitle').textContent = id ? '编辑商品' : '新增商品';
+  document.getElementById('prodId').value = id || '';
+  document.getElementById('prodName').value = '';
+  document.getElementById('prodPrice').value = '';
+  document.getElementById('prodStock').value = '';
+  document.getElementById('prodDesc').value = '';
+  document.getElementById('prodImages').value = '';
+  document.getElementById('prodStatus').value = 'on';
+  document.getElementById('prodImagesPreview').innerHTML = '';
+
+  // Load categories
+  const cats = await api('GET', '/api/admin/categories');
+  const sel = document.getElementById('prodCategory');
+  sel.innerHTML = '<option value="0">无分类</option>' + (cats || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+  if (id) {
+    const data = await api('GET', `/api/products/${id}`);
+    document.getElementById('prodName').value = data.name || '';
+    document.getElementById('prodPrice').value = data.price || '';
+    document.getElementById('prodStock').value = data.stock || '';
+    document.getElementById('prodDesc').value = data.desc || '';
+    document.getElementById('prodStatus').value = data.status || 'on';
+    document.getElementById('prodCategory').value = data.category_id || 0;
+    if (data.images && data.images.length) {
+      document.getElementById('prodImages').value = data.images.join('\n');
+      const preview = document.getElementById('prodImagesPreview');
+      preview.innerHTML = '';
+      data.images.forEach(u => { const img = document.createElement('img'); img.src = u; img.onclick = function(){ this.remove(); updateImagesTextarea(); }; img.title = '点击删除'; preview.appendChild(img); });
+    }
+  }
+  document.getElementById('productModal').classList.add('show');
+}
+
+function editProduct(id) { showProductModal(id); }
+
+async function saveProduct() {
+  const id = document.getElementById('prodId').value;
+  const images = document.getElementById('prodImages').value.split('\n').filter(s => s.trim());
+  const body = {
+    name: document.getElementById('prodName').value,
+    price: parseFloat(document.getElementById('prodPrice').value) || 0,
+    stock: parseInt(document.getElementById('prodStock').value) || 0,
+    category_id: parseInt(document.getElementById('prodCategory').value) || 0,
+    desc: document.getElementById('prodDesc').value,
+    status: document.getElementById('prodStatus').value,
+    images
+  };
+  if (id) {
+    await api('PUT', `/api/admin/products/${id}`, body);
+  } else {
+    await api('POST', '/api/admin/products', body);
+  }
+  closeModal('productModal');
+  loadProducts();
+}
+
+async function deleteProduct(id) {
+  if (!confirm('确定删除该商品？')) return;
+  await api('DELETE', `/api/admin/products/${id}`);
+  loadProducts();
+}
+
+// ===== Orders =====
+async function loadOrders() {
+  const status = document.getElementById('orderFilter').value;
+  const data = await api('GET', `/api/admin/orders?status=${status}&page=${currentPage.orders}&size=10`);
+  const tbody = document.getElementById('orderTable');
+  tbody.innerHTML = (data.list || []).map(o => `<tr>
+    <td style="font-size:12px">${o.order_no}</td>
+    <td>${o.username || '-'}</td>
+    <td style="max-width:200px">${(o.items || []).map(i => i.product_name).join(', ')}</td>
+    <td>¥${o.total_amount}</td>
+    <td>${statusTag(o.status)}</td>
+    <td style="font-size:12px;color:#999">${o.created_at}</td>
+    <td style="white-space:nowrap">
+      ${o.status === 'paid' ? `<button class="btn btn-sm btn-success" onclick="showLogistics(${o.id})">发货</button>` : ''}
+      ${o.status === 'pending' ? `<button class="btn btn-sm btn-danger" onclick="cancelOrder(${o.id})">取消</button>` : ''}
+      <button class="btn btn-sm btn-warning" onclick="viewOrder(${o.id})">详情</button>
+    </td>
+  </tr>`).join('');
+  renderPagination('orderPagination', data.total, 10, currentPage.orders, p => { currentPage.orders = p; loadOrders(); });
+}
+
+function statusTag(s) {
+  const map = { pending: '待支付', paid: '已支付', shipped: '已发货', done: '已完成', canceled: '已取消' };
+  return `<span class="tag tag-${s}">${map[s] || s}</span>`;
+}
+
+function showLogistics(orderId) {
+  document.getElementById('logOrderId').value = orderId;
+  document.getElementById('logCompany').value = '';
+  document.getElementById('logTrackingNo').value = '';
+  document.getElementById('logisticsModal').classList.add('show');
+}
+
+async function submitLogistics() {
+  const orderId = document.getElementById('logOrderId').value;
+  const company = document.getElementById('logCompany').value;
+  const trackingNo = document.getElementById('logTrackingNo').value;
+  await api('POST', `/api/admin/orders/${orderId}/logistics`, { company, tracking_no: trackingNo });
+  closeModal('logisticsModal');
+  loadOrders();
+}
+
+async function cancelOrder(id) {
+  if (!confirm('确定取消该订单？')) return;
+  await api('PUT', `/api/admin/orders/${id}/status`, { status: 'canceled' });
+  loadOrders();
+}
+
+async function viewOrder(id) {
+  const data = await api('GET', `/api/orders/${id}`);
+  const addr = data.address_info || {};
+  const items = (data.items || []).map(i => `${i.product_name} x${i.quantity} ¥${i.price}`).join('\n');
+  const logInfo = data.logistics ? `\n物流：${data.logistics.company} ${data.logistics.tracking_no}` : '';
+  alert(`订单号：${data.order_no}\n状态：${statusTag(data.status)}\n金额：¥${data.total_amount}\n商品：\n${items}\n收货地址：${addr.name} ${addr.phone}\n${addr.province || ''}${addr.city || ''}${addr.district || ''}${addr.detail || ''}${logInfo}\n时间：${data.created_at}`);
+}
+
+// ===== File Management =====
+async function loadFiles() {
+  const data = await api('GET', '/api/upload/files');
+  const el = document.getElementById('fileList');
+  if (!data.length) { el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#999">暂无上传文件</div>'; return; }
+  el.innerHTML = data.map(f => `
+    <div style="border:1px solid #eee;border-radius:8px;overflow:hidden;background:#fff">
+      <img src="${f.url}" style="width:100%;height:140px;object-fit:cover;background:#f5f5f5;cursor:pointer" onclick="window.open('${f.url}')">
+      <div style="padding:8px">
+        <div style="font-size:12px;color:#999;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.name}">${f.name}</div>
+        <div style="font-size:11px;color:#ccc">${(f.size/1024).toFixed(1)}KB</div>
+        <button class="btn btn-sm btn-danger" style="width:100%;margin-top:4px;font-size:11px;padding:4px" onclick="deleteFile('${f.name}')">删除</button>
+      </div>
+    </div>
+  `).join('');
+}
+async function deleteFile(name) {
+  if (!confirm('确定删除 ' + name + ' ？')) return;
+  await api('DELETE', '/api/upload/files/' + encodeURIComponent(name));
+  loadFiles();
+}
+
+// ===== Categories =====
+async function loadCategories() {
+  const data = await api('GET', '/api/admin/categories');
+  document.getElementById('categoryTable').innerHTML = (data || []).map(c => `<tr>
+    <td>${c.id}</td>
+    <td>${c.icon || ''} ${c.name}</td>
+    <td>${c.sort_order}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="deleteCategory(${c.id})">删除</button></td>
+  </tr>`).join('');
+}
+
+function showCategoryModal() {
+  document.getElementById('catName').value = '';
+  document.getElementById('catSort').value = '0';
+  document.getElementById('categoryModal').classList.add('show');
+}
+
+async function saveCategory() {
+  await api('POST', '/api/admin/categories', {
+    name: document.getElementById('catName').value,
+    sort_order: parseInt(document.getElementById('catSort').value) || 0
+  });
+  closeModal('categoryModal');
+  loadCategories();
+}
+
+async function deleteCategory(id) {
+  if (!confirm('确定删除该分类？')) return;
+  await api('DELETE', `/api/admin/categories/${id}`);
+  loadCategories();
+}
+
+// ===== Utils =====
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+// ===== Image Upload =====
+async function uploadImage() {
+  const fileInput = document.getElementById('fileInput');
+  if (!fileInput.files.length) return;
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+  try {
+    const res = await fetch('/api/upload/image', {
+      method: 'POST',
+      headers: TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {},
+      body: formData
+    });
+    const data = await res.json();
+    if (data.url) {
+      addImageUrlToList(data.url);
+    }
+  } catch (e) { alert('上传失败'); }
+  fileInput.value = '';
+}
+
+function addImageUrl() {
+  const input = document.getElementById('prodImageInput');
+  if (!input.value.trim()) return;
+  addImageUrlToList(input.value.trim());
+  input.value = '';
+}
+
+function addImageUrlToList(url) {
+  const preview = document.getElementById('prodImagesPreview');
+  const img = document.createElement('img');
+  img.src = url;
+  img.onclick = function() { this.remove(); updateImagesTextarea(); };
+  img.title = '点击删除';
+  preview.appendChild(img);
+  updateImagesTextarea();
+}
+
+function updateImagesTextarea() {
+  const urls = [];
+  document.getElementById('prodImagesPreview').querySelectorAll('img').forEach(img => urls.push(img.src));
+  document.getElementById('prodImages').value = urls.join('\n');
+}
+
+function renderPagination(elId, total, size, current, onClick) {
+  const totalPages = Math.ceil(total / size) || 1;
+  const el = document.getElementById(elId);
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  let html = '';
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="${i === current ? 'active' : ''}" onclick="(${onClick.toString()})(${i})">${i}</button>`;
+  }
+  el.innerHTML = html;
+}
+</script>
+</body>
+</html>

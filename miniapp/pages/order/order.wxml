@@ -1,0 +1,35 @@
+<view class="page">
+<!-- Status tabs -->
+<view class="status-tabs">
+  <view class="status-tab {{status === '' ? 'active' : ''}}" data-status="" bindtap="switchTab">全部</view>
+  <view class="status-tab {{status === 'pending' ? 'active' : ''}}" data-status="pending" bindtap="switchTab">待支付</view>
+  <view class="status-tab {{status === 'shipped' ? 'active' : ''}}" data-status="shipped" bindtap="switchTab">已发货</view>
+  <view class="status-tab {{status === 'done' ? 'active' : ''}}" data-status="done" bindtap="switchTab">已完成</view>
+</view>
+
+<view wx:if="{{orders.length === 0 && !loading}}" class="empty-state">
+  <text class="empty-icon">📋</text>
+  <text class="empty-text">暂无订单</text>
+</view>
+
+<view wx:for="{{orders}}" wx:key="id" class="order-card" data-id="{{item.id}}" bindtap="goDetail">
+  <view class="order-header">
+    <text class="order-no">{{item.order_no}}</text>
+    <text class="order-status {{item.status}}">{{item._statusText}}</text>
+  </view>
+  <view class="order-items">
+    <view wx:for="{{item.items}}" wx:key="id" class="order-item">
+      <image class="oi-image" src="{{item.product_image}}" mode="aspectFill"></image>
+      <text class="oi-name">{{item.product_name}}</text>
+      <text class="oi-qty">x{{item.quantity}}</text>
+      <text class="oi-price">¥{{item.price}}</text>
+    </view>
+  </view>
+  <view class="order-footer">
+    <text class="order-total">合计: ¥{{item.total_amount}}</text>
+    <text class="order-time">{{item.created_at}}</text>
+  </view>
+</view>
+
+<view wx:if="{{!hasMore && orders.length}}" class="loading-text">— 没有更多了 —</view>
+</view>

@@ -1,0 +1,50 @@
+page {
+  font-size: 28rpx;
+  color: #333;
+  background: #f5f7fa;
+}
+.container {
+  padding: 20rpx;
+}
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,.06);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 40rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  border: none;
+}
+.btn-primary {
+  background: #1a73e8;
+  color: #fff;
+}
+.btn-danger {
+  background: #ea4335;
+  color: #fff;
+}
+.btn-warning {
+  background: #fbbc04;
+  color: #333;
+}
+.btn-block {
+  width: 100%;
+}
+.btn-sm {
+  padding: 10rpx 24rpx;
+  font-size: 24rpx;
+}
+.input {
+  border: 2rpx solid #ddd;
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+  width: 100%;
+}

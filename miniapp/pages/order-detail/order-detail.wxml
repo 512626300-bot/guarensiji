@@ -1,0 +1,86 @@
+<view wx:if="{{loading}}" class="loading-text">加载中...</view>
+
+<view wx:if="{{order}}" class="page">
+  <!-- Status -->
+  <view class="status-bar {{order.status}}">
+    <text class="status-icon">
+      <text wx:if="{{order.status === 'pending'}}">⏳</text>
+      <text wx:elif="{{order.status === 'paid'}}">✅</text>
+      <text wx:elif="{{order.status === 'shipped'}}">🚚</text>
+      <text wx:elif="{{order.status === 'done'}}">🎉</text>
+      <text wx:elif="{{order.status === 'canceled'}}">❌</text>
+    </text>
+    <text class="status-title">{{order._statusText}}</text>
+  </view>
+
+  <!-- Logistics -->
+  <view class="card" wx:if="{{order.logistics}}">
+    <text class="card-title">物流信息</text>
+    <view class="logistics-card">
+      <view class="logistics-header">
+        <text class="logistics-company">{{order.logistics.company}}</text>
+        <text class="logistics-status">运输中</text>
+      </view>
+      <view class="tracking-row">
+        <text class="tracking-label">快递单号</text>
+        <text class="tracking-no">{{order.logistics.tracking_no}}</text>
+        <view class="copy-btn" data-text="{{order.logistics.tracking_no}}" bindtap="copyTrackingNo">复制</view>
+      </view>
+      <view class="log-timeline" wx:if="{{order.logistics.info && order.logistics.info.length}}">
+        <view wx:for="{{order.logistics.info}}" wx:key="index" class="log-item">
+          <text class="log-dot"></text>
+          <view class="log-content">
+            <text class="log-desc">{{item.desc}}</text>
+            <text class="log-time">{{item.time}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="log-empty" wx:else>
+        <text>暂无物流轨迹，请耐心等待更新</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- No logistics yet (paid status) -->
+  <view class="card" wx:if="{{!order.logistics && (order.status === 'paid' || order.status === 'shipped')}}">
+    <text class="card-title">物流信息</text>
+    <view class="logistics-card logistics-pending">
+      <text class="logistics-company">等待商家发货</text>
+      <text class="logistics-hint">商家发货后将在此显示快递单号</text>
+    </view>
+  </view>
+
+  <!-- Address -->
+  <view class="card">
+    <text class="card-title">收货信息</text>
+    <text class="addr-name">{{order.address_info.name}} {{order.address_info.phone}}</text>
+    <text class="addr-detail">{{order.address_info.province}}{{order.address_info.city}}{{order.address_info.district}}{{order.address_info.detail}}</text>
+  </view>
+
+  <!-- Items -->
+  <view class="card">
+    <text class="card-title">商品信息</text>
+    <view wx:for="{{order.items}}" wx:key="id" class="order-item">
+      <image class="oi-image" src="{{item.product_image}}" mode="aspectFill"></image>
+      <view class="oi-info">
+        <text class="oi-name">{{item.product_name}}</text>
+        <text class="oi-price">¥{{item.price}} x {{item.quantity}}</text>
+      </view>
+    </view>
+    <view class="order-summary">
+      <text>订单号: {{order.order_no}}</text>
+      <text>时间: {{order._formatTime}}</text>
+      <text wx:if="{{order.remark}}">备注: {{order.remark}}</text>
+      <text class="total-amount">合计: ¥{{order.total_amount}}</text>
+    </view>
+  </view>
+
+  <!-- Actions -->
+  <view class="action-bar" wx:if="{{order.status === 'pending'}}">
+    <button class="btn btn-danger" bindtap="cancelOrder">取消订单</button>
+    <button class="btn btn-primary" bindtap="pay">模拟支付</button>
+  </view>
+  <view class="action-bar" wx:if="{{order.status === 'shipped'}}">
+    <button class="btn btn-primary" bindtap="confirmReceipt">确认收货</button>
+  </view>
+</view>
